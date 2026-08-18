@@ -1,0 +1,277 @@
+{
+  "name": "01-webhook-receiver",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5ed67167-fb77-4358-a7a0-7d8b46345e16",
+              "leftValue": "={{ $json.body.name.trim() }}",
+              "rightValue": "^.+$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            },
+            {
+              "id": "260b4772-69ff-4bd4-b0d0-774b2fbccdd7",
+              "leftValue": "={{ $json.body.email.trim() }}",
+              "rightValue": "^.+@.+\\..+$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            },
+            {
+              "id": "33424fdb-0fc0-4a46-b1b1-311e82573c60",
+              "leftValue": "={{ $json.body.message.trim() }}",
+              "rightValue": "^.+$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        0
+      ],
+      "id": "8a22e8b2-9767-446d-94c1-9d0fcf0cf7e3",
+      "name": "Validate Data"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "day01-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "98e203b7-650f-4e3b-884c-b09d293422ea",
+      "name": "Receive POST Request",
+      "webhookId": "dbf607f6-9c33-4731-9c5e-b9b6c2274ef8"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c6b931c0-fa6d-452e-8ff2-0a5176155dcd",
+              "name": "name",
+              "value": "={{ $json.body.name.trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "c309593e-1ade-40bc-b4af-22172294b677",
+              "name": "email",
+              "value": "={{ $json.body.email.trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "1bfc6066-7932-4ba3-aed5-4a0d02be0b5a",
+              "name": "message",
+              "value": "={{ $json.body.message.trim() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        336,
+        -112
+      ],
+      "id": "d58d5b68-6152-4e58-b24a-ea3371ed011c",
+      "name": "Normalize Data"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "C8i7KoOBTMsRzWU9",
+          "mode": "list",
+          "cachedResultName": "01-webhook-receiver",
+          "cachedResultUrl": "/projects/FTuGrVaywMGoZD6A/datatables/C8i7KoOBTMsRzWU9"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name": "={{ $json.name }}",
+            "email": "={{ $json.email }}",
+            "message": "={{ $json.message }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        496,
+        -112
+      ],
+      "id": "a95b8592-7067-4364-8e07-bca325eb0c2b",
+      "name": "Save to Data Table"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Invalid.",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        336,
+        128
+      ],
+      "id": "333776e0-eb19-4e4e-abd2-0af3c2d42569",
+      "name": "Invalid Data - 400 Bad Request"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Success",
+        "options": {
+          "responseCode": 201
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        672,
+        -112
+      ],
+      "id": "ccdc102d-4844-440d-9864-8975a484bb1a",
+      "name": "Success - 201 Created"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Validate Data": {
+      "main": [
+        [
+          {
+            "node": "Normalize Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invalid Data - 400 Bad Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive POST Request": {
+      "main": [
+        [
+          {
+            "node": "Validate Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Data": {
+      "main": [
+        [
+          {
+            "node": "Save to Data Table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Data Table": {
+      "main": [
+        [
+          {
+            "node": "Success - 201 Created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success - 201 Created": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "03a987e1-75d2-4007-b154-d41f0fcab44c",
+  "meta": {
+    "instanceId": "d772304f4deedb84ae673cf89237f857eb9beb9d6e46f7197852fa4adda8f530"
+  },
+  "nodeGroups": [],
+  "id": "DafX7fpjXRqzCygF",
+  "tags": []
+}
