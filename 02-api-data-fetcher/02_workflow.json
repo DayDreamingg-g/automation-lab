@@ -1,0 +1,324 @@
+{
+  "name": "02-api-data-fetcher",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "day02-api-data-fetcher",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f248e0ba-a46d-4dfc-bc67-bc90bfaad9ee",
+      "name": "Receive POST Request",
+      "webhookId": "70a60519-f749-4c6e-8f55-bdbe8fc3b4ea"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "689b6b2f-d40a-4c45-a695-fc81d4ee257e",
+              "leftValue": "={{ $json.body.name.trim() }}",
+              "rightValue": "^.+$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            },
+            {
+              "id": "c0fe64b4-5df6-4480-9df5-df2aa026eb68",
+              "leftValue": "={{ $json.body.message }}",
+              "rightValue": "^.+$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        0
+      ],
+      "id": "ddbfe650-5a1d-49ab-9657-9058aaa8e9f9",
+      "name": "Validate Input"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b8467b1b-e80d-4907-8f3b-63d508042c91",
+              "name": "country",
+              "value": "={{ $json.headers['cf-ipcountry'] }}",
+              "type": "string"
+            },
+            {
+              "id": "9303af6f-540e-4f4e-8937-0b89efc6791e",
+              "name": "IPv6",
+              "value": "={{ $json.headers['cf-connecting-ip'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        400,
+        -112
+      ],
+      "id": "996b3573-0eb8-4193-94a1-0bf2b5c02742",
+      "name": "Extract Request Data"
+    },
+    {
+      "parameters": {
+        "url": "=https://ipwho.is/{{ $json.IPv6 }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        576,
+        -112
+      ],
+      "id": "241dc3b5-b347-49e3-8a0b-d8939b0b5cf5",
+      "name": "Fetch IP Information"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "rxdoyt7jKxQ1EAQT",
+          "mode": "list",
+          "cachedResultName": "02-api-data-fetcher",
+          "cachedResultUrl": "/projects/FTuGrVaywMGoZD6A/datatables/rxdoyt7jKxQ1EAQT"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name": "={{ $('Receive POST Request').item.json.body.name.trim() }}",
+            "message": "={{ $('Receive POST Request').item.json.body.message.trim() }}",
+            "ip": "={{ $json.ip }}",
+            "type": "={{ $json.type }}",
+            "continent": "={{ $json.continent }}",
+            "country": "={{ $json.country }}",
+            "region": "={{ $json.region }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ip",
+              "displayName": "ip",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "continent",
+              "displayName": "continent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "region",
+              "displayName": "region",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        752,
+        -112
+      ],
+      "id": "456557ee-7942-41ef-a457-b58c0b549c5e",
+      "name": "Save Enriched Data"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 201
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        928,
+        -112
+      ],
+      "id": "dcebb8e4-cdff-4b06-9e47-b2aa07cb6ffb",
+      "name": "Success - 201 Created"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Invalid",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        400,
+        112
+      ],
+      "id": "06a72cd3-0baf-404b-8231-a37e60cad1b3",
+      "name": "Invalid Data - 400 Bad Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Receive POST Request": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Extract Request Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invalid Data - 400 Bad Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Request Data": {
+      "main": [
+        [
+          {
+            "node": "Fetch IP Information",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch IP Information": {
+      "main": [
+        [
+          {
+            "node": "Save Enriched Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Enriched Data": {
+      "main": [
+        [
+          {
+            "node": "Success - 201 Created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "5b9291b9-d069-4b49-87b1-51a6f49347e0",
+  "meta": {
+    "instanceId": "d772304f4deedb84ae673cf89237f857eb9beb9d6e46f7197852fa4adda8f530"
+  },
+  "nodeGroups": [],
+  "id": "DuEcQWxuLvEc4DyI",
+  "tags": []
+}
