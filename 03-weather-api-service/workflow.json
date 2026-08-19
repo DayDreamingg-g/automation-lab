@@ -1,0 +1,689 @@
+{
+  "name": "03-weather-api-service",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6b075b29-9eb1-451b-8cb4-2eaea8849e93",
+              "leftValue": "={{ ($json.query.city || '').trim() }}",
+              "rightValue": "^.+$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        160,
+        0
+      ],
+      "id": "479a6788-d5d8-4166-a351-0cf7f4dd964d",
+      "name": "Validate City"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d1faae0b-4b90-4321-86ef-a44f7326c74f",
+              "name": "city",
+              "value": "={{ $json.query.city.trim() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        272,
+        -176
+      ],
+      "id": "9c36673a-4022-42dc-a752-cf8edbfe8bbc",
+      "name": "Extract City"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1280,
+        -336
+      ],
+      "id": "94b90bfc-ac96-4dd2-baa8-2bdc31860248",
+      "name": "200 OK"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "18257a16-3373-4bbd-b787-65c83e7884ee",
+              "name": "city",
+              "value": "={{ $('Extract Coordinates').item.json.city }}",
+              "type": "string"
+            },
+            {
+              "id": "506c3393-711c-42b7-85cb-18911ab07c95",
+              "name": "temperature",
+              "value": "={{ $json.current.temperature_2m }}",
+              "type": "number"
+            },
+            {
+              "id": "e0ed7d8b-a346-4b3c-8419-0cc0d0c64ccc",
+              "name": "feelsLike",
+              "value": "={{ $json.current.apparent_temperature }}",
+              "type": "number"
+            },
+            {
+              "id": "50034ef8-e618-4ae4-b3da-db210027c0a8",
+              "name": "humidity",
+              "value": "={{ $json.current.relative_humidity_2m }}",
+              "type": "number"
+            },
+            {
+              "id": "654c125d-8281-41dc-abe7-95fcb4bcf729",
+              "name": "precipitation",
+              "value": "={{ $json.current.precipitation }}",
+              "type": "number"
+            },
+            {
+              "id": "326fd0e7-44cd-4a06-937c-cfba0351cfc6",
+              "name": "weatherCode",
+              "value": "={{ $json.current.weather_code }}",
+              "type": "number"
+            },
+            {
+              "id": "3388b4e6-8380-4ac1-8edf-cfca359055e3",
+              "name": "windSpeed",
+              "value": "={{ $json.current.wind_speed_10m }}",
+              "type": "number"
+            },
+            {
+              "id": "fc36ce82-c933-4790-803b-e0ab1c7998fc",
+              "name": "timezone",
+              "value": "={{ $json.timezone }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        832,
+        -336
+      ],
+      "id": "977e0242-cc3a-4fc5-8d26-840a570bb348",
+      "name": "Normalize Weather Data"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "oW3PtfQvuYWuB2Ps",
+          "mode": "list",
+          "cachedResultName": "03-weather-api-service",
+          "cachedResultUrl": "/projects/FTuGrVaywMGoZD6A/datatables/oW3PtfQvuYWuB2Ps"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "city": "={{ $json.city }}",
+            "temperature": "={{ $json.temperature }}",
+            "feelsLike": "={{ $json.feelsLike }}",
+            "humidity": "={{ $json.humidity }}",
+            "precipitation": "={{ $json.precipitation }}",
+            "weatherCode": "={{ $json.weatherCode }}",
+            "windSpeed": "={{ $json.windSpeed }}",
+            "timezone": "={{ $json.timezone }}",
+            "weather": "={{ $json.weather }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "city",
+              "displayName": "city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "temperature",
+              "displayName": "temperature",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "feelsLike",
+              "displayName": "feelsLike",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "humidity",
+              "displayName": "humidity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "precipitation",
+              "displayName": "precipitation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "weatherCode",
+              "displayName": "weatherCode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "windSpeed",
+              "displayName": "windSpeed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "timezone",
+              "displayName": "timezone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "weather",
+              "displayName": "weather",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1056,
+        -336
+      ],
+      "id": "93d9c549-120b-4838-9a80-68c5d6db5081",
+      "name": "Save Weather Data"
+    },
+    {
+      "parameters": {
+        "url": "https://geocoding-api.open-meteo.com/v1/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.city }}"
+            },
+            {
+              "name": "count",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        384,
+        -336
+      ],
+      "id": "cb97db84-6c8c-4376-a844-e356d8f9df61",
+      "name": "Find City Coordinates"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d5df0b73-c063-4466-a499-1d2506d78fb4",
+              "name": "city",
+              "value": "={{ $json.results[0].name }}",
+              "type": "string"
+            },
+            {
+              "id": "0a91aa57-f52d-4f92-88c3-ef7806ffc1b8",
+              "name": "latitude",
+              "value": "={{ $json.results[0].latitude }}",
+              "type": "number"
+            },
+            {
+              "id": "1b802447-d0f3-40cf-b834-c3563ee2f658",
+              "name": "longitude",
+              "value": "={{ $json.results[0].longitude }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        608,
+        -336
+      ],
+      "id": "40356284-bcb7-4804-979b-c17a2dea7b84",
+      "name": "Extract Coordinates"
+    },
+    {
+      "parameters": {
+        "url": "https://api.open-meteo.com/v1/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "latitude",
+              "value": "={{ $json.latitude }}"
+            },
+            {
+              "name": "longitude",
+              "value": "={{ $json.longitude }}"
+            },
+            {
+              "name": "current",
+              "value": "temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m"
+            },
+            {
+              "name": "timezone",
+              "value": "auto"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        720,
+        -176
+      ],
+      "id": "6e615efa-43a8-43cb-89a7-0d335a00cec1",
+      "name": "Fetch Current Weather"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst weatherCode = data.weatherCode;\n\nconst weatherMap = {\n  0: \"Clear sky\",\n  1: \"Mainly clear\",\n  2: \"Partly cloudy\",\n  3: \"Overcast\",\n\n  45: \"Fog\",\n  48: \"Depositing rime fog\",\n\n  51: \"Light drizzle\",\n  53: \"Moderate drizzle\",\n  55: \"Dense drizzle\",\n\n  56: \"Light freezing drizzle\",\n  57: \"Dense freezing drizzle\",\n\n  61: \"Slight rain\",\n  63: \"Moderate rain\",\n  65: \"Heavy rain\",\n\n  66: \"Light freezing rain\",\n  67: \"Heavy freezing rain\",\n\n  71: \"Slight snowfall\",\n  73: \"Moderate snowfall\",\n  75: \"Heavy snowfall\",\n  77: \"Snow grains\",\n\n  80: \"Slight rain showers\",\n  81: \"Moderate rain showers\",\n  82: \"Violent rain showers\",\n\n  85: \"Slight snow showers\",\n  86: \"Heavy snow showers\",\n\n  95: \"Thunderstorm\",\n  96: \"Thunderstorm with slight hail\",\n  99: \"Thunderstorm with heavy hail\"\n};\n\ndata.weather = weatherMap[weatherCode] ?? \"Unknown\";\n\nreturn [{ json: data }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        -176
+      ],
+      "id": "9c1ff4a7-c40e-439c-acbb-008302a574af",
+      "name": "Map Weather Code"
+    },
+    {
+      "parameters": {
+        "path": "Day-3-weather-api-service",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e1aba406-98f1-4b8d-8f34-3793537f4d29",
+      "name": "Receive Weather Request",
+      "webhookId": "0cf9c6df-4d15-4f7c-9db1-12fe80a852df"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1e36a29b-fb74-40e6-b579-0bbb722268a4",
+              "name": "city",
+              "value": "={{ $json.city }}",
+              "type": "string"
+            },
+            {
+              "id": "dde6b3ee-907e-4af6-b0c3-5d6297c1b2b7",
+              "name": "temperature",
+              "value": "={{ $json.temperature }}",
+              "type": "number"
+            },
+            {
+              "id": "529c2968-c47d-47f4-86bf-bcf5e106ef1e",
+              "name": "feelsLike",
+              "value": "={{ $json.feelsLike }}",
+              "type": "number"
+            },
+            {
+              "id": "9c17ca9c-38d4-4a48-a8dd-b47c4a4e15c9",
+              "name": "humidity",
+              "value": "={{ $json.humidity }}",
+              "type": "number"
+            },
+            {
+              "id": "79fb25c7-dca9-4fcc-b246-27461d1ca825",
+              "name": "precipitation",
+              "value": "={{ $json.precipitation }}",
+              "type": "number"
+            },
+            {
+              "id": "337f09e3-89d1-485f-adba-6b7f1ba192fa",
+              "name": "weatherCode",
+              "value": "={{ $json.weatherCode }}",
+              "type": "number"
+            },
+            {
+              "id": "e8cdba9d-3882-4680-9289-f4cbf7f7b023",
+              "name": "weather",
+              "value": "={{ $json.weather }}",
+              "type": "string"
+            },
+            {
+              "id": "cb421cde-5e2c-4590-b73d-c0df3d7de27a",
+              "name": "windSpeed",
+              "value": "={{ $json.windSpeed }}",
+              "type": "number"
+            },
+            {
+              "id": "cdc9f670-a945-4731-92e8-aecd4a569c14",
+              "name": "timezone",
+              "value": "={{ $json.timezone }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1168,
+        -176
+      ],
+      "id": "c6e7214a-ad13-4d9c-82db-4188a51d5b08",
+      "name": "Prepare API Response"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0f374a30-d85b-40a5-a574-a5141dbd032d",
+              "leftValue": "={{ $json.results?.length || 0 }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        496,
+        -176
+      ],
+      "id": "151d0912-d8ea-4977-bb6c-7b667867deb3",
+      "name": "City Exists?"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Invalid. Bad Request.",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        320,
+        16
+      ],
+      "id": "68b24f34-3f12-47b9-8e80-36037a6f3c10",
+      "name": "Invalid Request. 400 Bad Request"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "City Not Found.",
+        "options": {
+          "responseCode": 404
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        608,
+        16
+      ],
+      "id": "4ae16199-1458-4fa4-870e-071b306aeab3",
+      "name": "City Not Found. 404 Not Found"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Validate City": {
+      "main": [
+        [
+          {
+            "node": "Extract City",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invalid Request. 400 Bad Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract City": {
+      "main": [
+        [
+          {
+            "node": "Find City Coordinates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Weather Data": {
+      "main": [
+        [
+          {
+            "node": "Map Weather Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Weather Data": {
+      "main": [
+        [
+          {
+            "node": "Prepare API Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find City Coordinates": {
+      "main": [
+        [
+          {
+            "node": "City Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Coordinates": {
+      "main": [
+        [
+          {
+            "node": "Fetch Current Weather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Current Weather": {
+      "main": [
+        [
+          {
+            "node": "Normalize Weather Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Weather Code": {
+      "main": [
+        [
+          {
+            "node": "Save Weather Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive Weather Request": {
+      "main": [
+        [
+          {
+            "node": "Validate City",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare API Response": {
+      "main": [
+        [
+          {
+            "node": "200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "City Exists?": {
+      "main": [
+        [
+          {
+            "node": "Extract Coordinates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "City Not Found. 404 Not Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "City Not Found. 404 Not Found": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "442de6f9-46e8-4b93-968a-d0b1dbf142e4",
+  "meta": {
+    "instanceId": "d772304f4deedb84ae673cf89237f857eb9beb9d6e46f7197852fa4adda8f530"
+  },
+  "nodeGroups": [],
+  "id": "zdCCFV0xsJyHmDY7",
+  "tags": []
+}
