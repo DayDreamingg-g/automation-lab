@@ -1,164 +1,177 @@
-# ⚙️ Automation Lab
+# Automation Lab
 
-A growing collection of hands-on projects focused on **automation, APIs, backend development, and AI**.
+A collection of small n8n automation projects built to practice workflow automation, APIs, data processing, validation, storage, and backend logic.
 
-The goal of this repository is simple: learn by building real workflows, understand how they work, document what I learn, and gradually increase the complexity.
-
-> Build → Break → Understand → Document → Repeat.
+The projects gradually increase in complexity. Each workflow focuses on a specific set of concepts and is documented with a preview and an exported n8n workflow.
 
 ---
 
-## 🧪 Projects
+## Projects
 
-### 01 — Webhook Receiver
+### 01 - Webhook Receiver
 
-A complete webhook processing flow built with **n8n**.
+A basic webhook workflow that receives POST requests, validates incoming data, normalizes it, stores it in an n8n Data Table, and returns the appropriate HTTP response.
 
-The workflow receives a `POST` request, validates incoming data, normalizes it, stores valid records in an n8n Data Table, and returns the appropriate HTTP response.
+**What it covers:**
+- Webhook triggers
+- POST requests
+- JSON request bodies
+- Input validation
+- Regular expressions
+- Data normalization
+- Edit Fields
+- Data Tables
+- HTTP responses
+- 201 Created / 400 Bad Request
 
-![Webhook Receiver Workflow](./01-webhook-receiver/01_preview.png)
+**Flow:**
 
-#### Flow
+`POST Request -> Validate Data -> Normalize Data -> Save to Data Table -> HTTP Response`
+
+![01 Webhook Receiver](./01-webhook-receiver/01_preview.png)
+
+---
+
+### 02 - API Data Fetcher
+
+A workflow that receives user data through a webhook, validates the request, extracts the client's IP address, fetches additional IP information from an external API, combines data from multiple workflow stages, stores the enriched result, and returns an HTTP response.
+
+**What it covers:**
+- Webhook triggers
+- POST requests
+- Input validation
+- Data extraction
+- External API requests
+- HTTP Request node
+- Dynamic expressions
+- Data enrichment
+- Combining data from different nodes
+- Data Tables
+- 201 Created / 400 Bad Request
+
+**Flow:**
+
+`POST Request -> Validate Input -> Extract Request Data -> Fetch IP Information -> Save Enriched Data -> HTTP Response`
+
+![02 API Data Fetcher](./02-api-data-fetcher/02_preview.png)
+
+---
+
+### 03 - Weather API Service
+
+A dynamic weather API workflow that receives a city through a GET query parameter, resolves the city to coordinates, fetches current weather data, normalizes the result, maps weather codes to readable descriptions, stores the weather data, and returns a clean API response.
+
+The workflow also distinguishes between invalid requests and valid requests for cities that cannot be found.
+
+**What it covers:**
+- GET requests
+- Query parameters
+- Input validation
+- Geocoding API integration
+- API chaining
+- Passing data between external APIs
+- Nested JSON structures
+- Array access with `results[0]`
+- Resource existence validation
+- Dynamic expressions
+- Weather API integration
+- Data normalization
+- JavaScript Code node
+- WMO weather code mapping
+- Data Tables
+- Public API response shaping
+- 200 OK
+- 400 Bad Request
+- 404 Not Found
+
+**Flow:**
+
+`GET Request -> Validate City -> Extract City -> Find City Coordinates -> Validate Result -> Extract Coordinates -> Fetch Current Weather -> Normalize Weather Data -> Map Weather Code -> Save Weather Data -> Prepare API Response -> 200 OK`
+
+Error paths:
+
+`Invalid Request -> 400 Bad Request`
+
+`City Not Found -> 404 Not Found`
+
+![03 Weather API Service](./03-weather-api-service/03_preview.png)
+
+---
+
+## Project Structure
 
 ```text
-POST Request
-     ↓
-Validation
-   ↙     ↘
-TRUE    FALSE
- ↓        ↓
-Normalize   400 Bad Request
- ↓
-Data Table
- ↓
-201 Created
+automation-lab/
+│
+├── 01-webhook-receiver/
+│   ├── 01_preview.png
+│   └── workflow.json
+│
+├── 02-api-data-fetcher/
+│   ├── 02_preview.png
+│   └── workflow.json
+│
+├── 03-weather-api-service/
+│   ├── 03_preview.png
+│   └── workflow.json
+│
+└── README.md
 ```
 
-#### What it covers
+Each project contains:
 
-* HTTP POST requests
-* Webhooks
-* JSON request body
-* Input validation
-* Regex
-* Data normalization with `trim()`
-* TRUE / FALSE branching
-* Data mapping
-* n8n Data Tables
-* HTTP response codes
-* `201 Created`
-* `400 Bad Request`
-* API testing with Postman
-* Cloudflare Tunnel
+- `workflow.json` - exported n8n workflow
+- `XX_preview.png` - visual preview of the workflow
 
-📁 [`01-webhook-receiver`](./01-webhook-receiver/)
+Detailed learning notes and troubleshooting documentation are maintained separately in my Discord workspace.
 
 ---
 
-### 02 — API Data Fetcher
+## Learning Progress
 
-A webhook-based data enrichment workflow built with **n8n**.
+### 01 - Webhook Receiver
 
-The workflow receives a `POST` request, validates the incoming data, extracts the client's IP address from Cloudflare request headers, fetches additional IP information from an external REST API, stores the enriched record in an n8n Data Table, and returns the appropriate HTTP response.
+Started with the fundamentals of building an API-style workflow in n8n:
 
-![API Data Fetcher Workflow](./02-api-data-fetcher/02_preview.png)
+`Webhook -> Validation -> Normalization -> Storage -> Response`
 
-#### Flow
+### 02 - API Data Fetcher
 
-```text
-POST Request
-     ↓
-Validation
-   ↙      ↘
-TRUE     FALSE
- ↓         ↓
-Extract    400 Bad Request
- ↓
-External API
- ↓
-Data Enrichment
- ↓
-Data Table
- ↓
-201 Created
-```
+Extended the workflow with an external API and data enrichment:
 
-#### What it covers
+`Webhook -> Validation -> Data Extraction -> External API -> Enriched Storage -> Response`
 
-* External REST API requests
-* n8n HTTP Request node
-* Dynamic API URLs
-* n8n expressions
-* Client IP extraction
-* Cloudflare request headers
-* IPv4 / IPv6 handling
-* Input validation with `trim()` and regex
-* Data enrichment
-* Combining data from multiple workflow stages
-* n8n Data Tables
-* HTTP response codes
-* External API error handling
-* Test webhook troubleshooting
+### 03 - Weather API Service
 
-The workflow uses **ipwho.is** to enrich the original request with information such as:
+Built a dynamic API service using multiple external API calls and additional backend logic:
 
-`IP` · `IP type` · `Continent` · `Country` · `Region`
+`GET Query -> Validation -> Geocoding API -> Result Validation -> Weather API -> Normalization -> JavaScript Mapping -> Storage -> Public Response`
 
-📁 [`02-api-data-fetcher`](./02-api-data-fetcher/)
+This project introduced API chaining, nested response processing, resource validation, JavaScript transformations, and separation between internal stored data and the public API response.
 
 ---
 
-## 🛠️ Technologies
+## Tech
 
-`n8n` · `REST API` · `HTTP` · `JSON` · `Webhooks` · `Postman` · `Cloudflare Tunnel` · `ipwho.is`
-
-More technologies will be added as the projects become more complex.
-
-Planned areas include:
-
-`Docker` · `PostgreSQL` · `External APIs` · `Telegram` · `Discord` · `LLMs` · `RAG` · `Vector Databases` · `AI Agents` · `Orchestration`
-
----
-
-## 📚 Detailed Learning Notes
-
-Each project is documented in much more detail in **Daydreaming Workspace**, my public Discord knowledge base.
-
-It contains:
-
-* explanations of individual workflow components;
-* screenshots and configuration examples;
-* concepts learned while building;
-* mistakes, debugging, and troubleshooting;
-* quick navigation for every project;
-* practical notes that grow together with the repository.
-
-> **Language:** The Discord server and learning notes are primarily in **Russian**.
-
-**[Join Daydreaming Workspace →](https://discord.gg/Mxy9y8uMFJ)**
+- n8n
+- JavaScript
+- REST APIs
+- Webhooks
+- JSON
+- HTTP
+- Regular Expressions
+- n8n Data Tables
+- Open-Meteo APIs
+- Postman
+- Docker
+- Cloudflare Tunnel
 
 ---
 
-## 🎯 Goal
+## Goal
 
-This repository is not intended to be a collection of copied tutorials.
+The goal of this repository is to build practical automation experience through small projects instead of only studying individual n8n nodes.
 
-Each project is built as a practical exercise to improve my understanding of:
+Each new workflow introduces additional concepts while reusing knowledge from previous projects.
 
-**Automation · Backend · APIs · Data Processing · AI**
-
-The projects gradually increase in complexity — from basic webhooks and API integrations to databases, backend services, AI workflows, RAG, agents, orchestration, and more advanced automation systems.
-
-The long-term goal is to turn the knowledge gained here into larger, production-oriented software and automation products.
-
----
-
-## 📈 Progress
-
-* [x] `01` — Webhook Receiver
-* [x] `02` — API Data Fetcher
-* [ ] `03` — Coming next...
-
----
-
-> **02 / 50 — Automation Lab**
+The long-term goal is to progress from basic workflows to more advanced automation systems involving multiple APIs, databases, AI agents, queues, orchestration, monitoring, and production-style error handling.
