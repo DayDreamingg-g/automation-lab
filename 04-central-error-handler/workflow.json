@@ -1,0 +1,577 @@
+{
+  "name": "04-central-error-handler",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nconst message = (data.errorMessage || \"\").toLowerCase();\n\nlet errorType = \"unknown\";\nlet errorSubtype = \"unknown\";\n\nconst hasAny = (...patterns) =>\n  patterns.some(pattern => message.includes(pattern));\n\n\n// ======================================================\n// NETWORK\n// ======================================================\n\n// DNS / hostname resolution\nif (hasAny(\n  \"enotfound\",\n  \"getaddrinfo\",\n  \"eai_again\",\n  \"dns lookup\",\n  \"dns resolution\",\n  \"unknown host\",\n  \"hostname not found\",\n  \"could not resolve\",\n  \"failed to resolve\",\n  \"name resolution\"\n)) {\n  errorType = \"network\";\n  errorSubtype = \"dns\";\n}\n\n// Timeout\nelse if (hasAny(\n  \"etimedout\",\n  \"esockettimedout\",\n  \"connection timed out\",\n  \"connection timeout\",\n  \"connect timeout\",\n  \"socket timeout\",\n  \"request timeout\",\n  \"network timeout\"\n)) {\n  errorType = \"network\";\n  errorSubtype = \"timeout\";\n}\n\n// TLS / SSL / certificates\nelse if (hasAny(\n  \"tls\",\n  \"ssl\",\n  \"certificate\",\n  \"self signed certificate\",\n  \"certificate has expired\",\n  \"unable to verify\",\n  \"unable to get local issuer certificate\",\n  \"certificate verify failed\",\n  \"wrong version number\"\n)) {\n  errorType = \"network\";\n  errorSubtype = \"tls\";\n}\n\n// Connection\nelse if (hasAny(\n  \"econnrefused\",\n  \"econnreset\",\n  \"econnaborted\",\n  \"enetunreach\",\n  \"ehostunreach\",\n  \"connection refused\",\n  \"connection reset\",\n  \"connection aborted\",\n  \"connection failed\",\n  \"connection cannot be established\",\n  \"could not connect\",\n  \"failed to connect\",\n  \"unable to connect\",\n  \"network unreachable\",\n  \"host unreachable\",\n  \"incorrect host\",\n  \"invalid host\",\n  \"socket hang up\",\n  \"socket closed\"\n)) {\n  errorType = \"network\";\n  errorSubtype = \"connection\";\n}\n\n\n// ======================================================\n// HTTP\n// ======================================================\n\n// 429\nelse if (hasAny(\n  \"429\",\n  \"too many requests\",\n  \"rate limit\",\n  \"rate_limit\",\n  \"rate limit exceeded\"\n)) {\n  errorType = \"http\";\n  errorSubtype = \"rate_limit\";\n}\n\n// 401\nelse if (hasAny(\n  \"401\",\n  \"unauthorized\"\n)) {\n  errorType = \"http\";\n  errorSubtype = \"auth\";\n}\n\n// 403\nelse if (hasAny(\n  \"403\",\n  \"forbidden\"\n)) {\n  errorType = \"http\";\n  errorSubtype = \"forbidden\";\n}\n\n// 404\nelse if (hasAny(\n  \"404\",\n  \"http resource not found\"\n)) {\n  errorType = \"http\";\n  errorSubtype = \"not_found\";\n}\n\n// 409\nelse if (hasAny(\n  \"409\",\n  \"conflict\"\n)) {\n  errorType = \"http\";\n  errorSubtype = \"conflict\";\n}\n\n// 422\nelse if (hasAny(\n  \"422\",\n  \"unprocessable entity\",\n  \"unprocessable content\"\n)) {\n  errorType = \"http\";\n  errorSubtype = \"validation\";\n}\n\n// Gateway errors\nelse if (hasAny(\n  \"502\",\n  \"bad gateway\",\n  \"504\",\n  \"gateway timeout\"\n)) {\n  errorType = \"http\";\n  errorSubtype = \"gateway\";\n}\n\n// Server errors\nelse if (hasAny(\n  \"500\",\n  \"501\",\n  \"503\",\n  \"505\",\n  \"internal server error\",\n  \"service unavailable\",\n  \"server error\"\n)) {\n  errorType = \"http\";\n  errorSubtype = \"server_error\";\n}\n\n// Other 4xx\nelse if (hasAny(\n  \"400\",\n  \"bad request\",\n  \"405\",\n  \"method not allowed\",\n  \"406\",\n  \"not acceptable\",\n  \"408\",\n  \"request timeout\",\n  \"410\",\n  \"gone\",\n  \"413\",\n  \"payload too large\",\n  \"415\",\n  \"unsupported media type\"\n)) {\n  errorType = \"http\";\n  errorSubtype = \"bad_request\";\n}\n\n\n// ======================================================\n// AUTH\n// ======================================================\n\n// Expired token\nelse if (hasAny(\n  \"token expired\",\n  \"expired token\",\n  \"jwt expired\",\n  \"jwt expired\",\n  \"token has expired\"\n)) {\n  errorType = \"auth\";\n  errorSubtype = \"token_expired\";\n}\n\n// Permissions\nelse if (hasAny(\n  \"permission denied\",\n  \"insufficient permissions\",\n  \"insufficient privileges\",\n  \"access denied\",\n  \"not permitted\"\n)) {\n  errorType = \"auth\";\n  errorSubtype = \"permission\";\n}\n\n// Credentials\nelse if (hasAny(\n  \"invalid api key\",\n  \"api key invalid\",\n  \"invalid token\",\n  \"invalid credentials\",\n  \"authentication failed\",\n  \"authentication required\",\n  \"credentials are invalid\",\n  \"credentials missing\",\n  \"missing credentials\"\n)) {\n  errorType = \"auth\";\n  errorSubtype = \"credentials\";\n}\n\n\n// ======================================================\n// DATABASE\n// ======================================================\n\n// Duplicate / unique\nelse if (hasAny(\n  \"duplicate key\",\n  \"duplicate entry\",\n  \"unique constraint\",\n  \"unique constraint failed\",\n  \"already exists\"\n)) {\n  errorType = \"database\";\n  errorSubtype = \"duplicate\";\n}\n\n// Constraints\nelse if (hasAny(\n  \"foreign key constraint\",\n  \"constraint failed\",\n  \"not-null constraint\",\n  \"not null constraint\",\n  \"violates foreign key\",\n  \"violates constraint\"\n)) {\n  errorType = \"database\";\n  errorSubtype = \"constraint\";\n}\n\n// Database connection\nelse if (hasAny(\n  \"database connection\",\n  \"connection to database\",\n  \"database unavailable\",\n  \"could not connect to database\",\n  \"too many connections\"\n)) {\n  errorType = \"database\";\n  errorSubtype = \"connection\";\n}\n\n// Query\nelse if (hasAny(\n  \"sql syntax\",\n  \"syntax error at or near\",\n  \"query failed\",\n  \"database query\",\n  \"invalid query\"\n)) {\n  errorType = \"database\";\n  errorSubtype = \"query\";\n}\n\n\n// ======================================================\n// DATA\n// ======================================================\n\n// JSON parsing\nelse if (hasAny(\n  \"json parse\",\n  \"invalid json\",\n  \"unexpected token\",\n  \"unexpected end of json\",\n  \"json syntax\",\n  \"parse error\"\n)) {\n  errorType = \"data\";\n  errorSubtype = \"json_parse\";\n}\n\n// Missing data\nelse if (hasAny(\n  \"required field\",\n  \"missing field\",\n  \"missing parameter\",\n  \"required parameter\",\n  \"required property\",\n  \"is required\"\n)) {\n  errorType = \"data\";\n  errorSubtype = \"missing_data\";\n}\n\n// Type problems\nelse if (hasAny(\n  \"typeerror\",\n  \"type error\",\n  \"expected string\",\n  \"expected number\",\n  \"expected object\",\n  \"expected array\",\n  \"invalid type\"\n)) {\n  errorType = \"data\";\n  errorSubtype = \"type\";\n}\n\n// General validation\nelse if (hasAny(\n  \"validation failed\",\n  \"validation error\",\n  \"invalid input\",\n  \"invalid value\",\n  \"invalid format\"\n)) {\n  errorType = \"data\";\n  errorSubtype = \"validation\";\n}\n\n\n// ======================================================\n// WORKFLOW / N8N\n// ======================================================\n\n// Expressions\nelse if (hasAny(\n  \"expression error\",\n  \"invalid expression\",\n  \"referenced node\",\n  \"can't get data for expression\",\n  \"cannot get data for expression\"\n)) {\n  errorType = \"workflow\";\n  errorSubtype = \"expression\";\n}\n\n// Configuration\nelse if (hasAny(\n  \"not configured\",\n  \"configuration error\",\n  \"missing configuration\",\n  \"parameter is required\",\n  \"credentials not found\"\n)) {\n  errorType = \"workflow\";\n  errorSubtype = \"configuration\";\n}\n\n// Node\nelse if (hasAny(\n  \"node execution\",\n  \"node failed\",\n  \"problem in node\"\n)) {\n  errorType = \"workflow\";\n  errorSubtype = \"node\";\n}\n\n\n// ======================================================\n// RESOURCE\n// ======================================================\n\nelse if (hasAny(\n  \"resource not found\",\n  \"record not found\",\n  \"entity not found\"\n)) {\n  errorType = \"resource\";\n  errorSubtype = \"not_found\";\n}\n\nelse if (hasAny(\n  \"resource unavailable\",\n  \"temporarily unavailable\"\n)) {\n  errorType = \"resource\";\n  errorSubtype = \"unavailable\";\n}\n\n\n// ======================================================\n// RESULT\n// ======================================================\n\ndata.errorType = errorType;\ndata.errorSubtype = errorSubtype;\n\nreturn [{ json: data }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        0
+      ],
+      "id": "5c11ae3a-97bf-4192-b77c-ddaea9bf8f57",
+      "name": "Classify Error"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst severityMap = {\n  // Critical\n  \"database:connection\": \"critical\",\n  \"workflow:configuration\": \"critical\",\n  \"workflow:node\": \"critical\",\n\n  // High\n  \"network:dns\": \"high\",\n  \"network:connection\": \"high\",\n  \"network:timeout\": \"high\",\n  \"network:tls\": \"high\",\n\n  \"http:server_error\": \"high\",\n  \"http:gateway\": \"high\",\n\n  \"database:constraint\": \"high\",\n\n  \"auth:permission\": \"high\",\n\n  \"unknown:unknown\": \"high\",\n\n  // Medium\n  \"http:not_found\": \"medium\",\n  \"http:auth\": \"medium\",\n  \"http:forbidden\": \"medium\",\n  \"http:rate_limit\": \"medium\",\n\n  \"database:duplicate\": \"medium\",\n  \"database:query\": \"medium\",\n  \"database:not_found\": \"medium\",\n\n  \"auth:credentials\": \"medium\",\n  \"auth:token_expired\": \"medium\",\n\n  \"resource:not_found\": \"medium\",\n  \"resource:unavailable\": \"medium\",\n\n  \"workflow:expression\": \"medium\",\n\n  // Low\n  \"http:bad_request\": \"low\",\n  \"http:validation\": \"low\",\n  \"http:conflict\": \"low\",\n\n  \"data:validation\": \"low\",\n  \"data:json_parse\": \"low\",\n  \"data:type\": \"low\",\n  \"data:missing_data\": \"low\"\n};\n\nfor (const item of items) {\n  const data = item.json;\n\n  const key = `${data.errorType}:${data.errorSubtype}`;\n\n  data.severity = severityMap[key] ?? \"high\";\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "8377e680-16d6-49e5-925a-fbaf49c8537f",
+      "name": "Assign Severity"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        16,
+        0
+      ],
+      "id": "51b5f488-4e8e-49e2-a8c5-89b1ad34b7f8",
+      "name": "Catch Errors",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ed973f3e-428a-441a-9531-850e03bb0cb8",
+              "name": "executionId",
+              "value": "={{ $json.execution.id }}",
+              "type": "number"
+            },
+            {
+              "id": "f566e3c7-eeb4-4dd5-a9d9-912f73340b1e",
+              "name": "xecutionUrl",
+              "value": "={{ $json.execution.url }}",
+              "type": "string"
+            },
+            {
+              "id": "c2923bac-10ec-491a-bb21-a2c1e98f2d58",
+              "name": "workflowName",
+              "value": "={{ $json.workflow.name }}",
+              "type": "string"
+            },
+            {
+              "id": "dcef85ab-c364-40e8-a436-9ce776e5727d",
+              "name": "workflowId",
+              "value": "={{ $json.workflow.id }}",
+              "type": "string"
+            },
+            {
+              "id": "9aebeb41-357c-4cfb-9d59-b6bf40da4672",
+              "name": "failedNode",
+              "value": "={{ $json.execution.lastNodeExecuted }}",
+              "type": "string"
+            },
+            {
+              "id": "43f5edc3-27fe-423e-a54a-1cc64c85afe1",
+              "name": "errorMessage",
+              "value": "={{ $json.execution.error.message }}",
+              "type": "string"
+            },
+            {
+              "id": "0a68045e-a4e9-4e86-ae18-d9271d40d77c",
+              "name": "mode",
+              "value": "={{ $json.execution.mode }}",
+              "type": "string"
+            },
+            {
+              "id": "6454c38d-c3a1-4d16-b626-09190b98a101",
+              "name": "method",
+              "value": "={{ $json.execution.error.context.request.method }}",
+              "type": "string"
+            },
+            {
+              "id": "c43e3460-7352-4bbf-8acf-87f6f49cd36e",
+              "name": "requestUrl",
+              "value": "= {{ $json.execution.error.context.request.uri }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        160,
+        0
+      ],
+      "id": "87c8c614-241f-4ced-8de8-054e3fc5da37",
+      "name": "Normalize Data"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "NymhfKEZDwv0TKiU",
+          "mode": "list",
+          "cachedResultName": "error_logs",
+          "cachedResultUrl": "/projects/FTuGrVaywMGoZD6A/datatables/NymhfKEZDwv0TKiU"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "executionId": "={{ $json.executionId }}",
+            "executionUrl": "={{ $json.xecutionUrl }}",
+            "workflowId": "={{ $json.workflowId }}",
+            "workflowName": "={{ $json.workflowName }}",
+            "failedNode": "={{ $json.failedNode }}",
+            "errorType": "={{ $json.errorType }}",
+            "errorSubtype": "={{ $json.errorSubtype }}",
+            "method": "={{ $json.method }}",
+            "errorMessage": "={{ $json.errorMessage }}",
+            "requestUrl": "={{ $json.requestUrl }}",
+            "severity": "={{ $json.severity }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "executionId",
+              "displayName": "executionId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "severity",
+              "displayName": "severity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "executionUrl",
+              "displayName": "executionUrl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "workflowId",
+              "displayName": "workflowId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "workflowName",
+              "displayName": "workflowName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "failedNode",
+              "displayName": "failedNode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "errorType",
+              "displayName": "errorType",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "errorSubtype",
+              "displayName": "errorSubtype",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "method",
+              "displayName": "method",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "errorMessage",
+              "displayName": "errorMessage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "requestUrl",
+              "displayName": "requestUrl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        592,
+        0
+      ],
+      "id": "8e59c276-bfea-40a7-bb62-6e23ad0566fd",
+      "name": "Store Error"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.severity }}",
+                    "rightValue": "low",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "3ee8ca2f-7cc8-4680-af6c-16eb47229b5a"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "low"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d044b49c-00da-4973-9679-f6b2b91efe0f",
+                    "leftValue": "={{ $json.severity }}",
+                    "rightValue": "medium",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "medium"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "17c2af33-4d69-43d7-85c0-eba006fb8177",
+                    "leftValue": "={{ $json.severity }}",
+                    "rightValue": "high",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "high"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "144be7a4-1327-431b-8cf5-48ea163dfe4c",
+                    "leftValue": "={{ $json.severity }}",
+                    "rightValue": "critical",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "critical"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        736,
+        -32
+      ],
+      "id": "37894044-3e09-4151-8126-b017d13309cf",
+      "name": "Route Severity"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://discord.com/api/webhooks/1539795037939040347/ksszexPyjWP7SyUqrxpxoRGt83UNlWab16hA1WMp-6I3ZsGRl1Dfx37S8xNIfo3KU4QT",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "={{ `🚨 HIGH ERROR\n\nWorkflow: ${$json.workflowName}\nNode: ${$json.failedNode}\n\nType: ${$json.errorType}\nSubtype: ${$json.errorSubtype}\nMethod: ${$json.method}\n\nRequest:\n${$json.requestUrl}\n\nError:\n${$json.errorMessage}\n\nExecution:\n${$json.executionUrl}` }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        976,
+        16
+      ],
+      "id": "cb2645a1-3e2f-486f-8c19-e955a0caece5",
+      "name": "High Alert"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://discord.com/api/webhooks/1539803140138868756/dNCiMVax0PJpG1wvWWMgCrCnH4_wQLzrP5AxuLG4GGomG6UmpGxar3oQR8eRMTRK3SwZ",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "={{ `🚨🚨 CRITICAL ERROR 🚨🚨\n\nWorkflow: ${$json.workflowName}\nNode: ${$json.failedNode}\n\nType: ${$json.errorType}\nSubtype: ${$json.errorSubtype}\nMethod: ${$json.method}\n\nRequest:\n${$json.requestUrl}\n\nError:\n${$json.errorMessage}\n\nExecution:\n${$json.executionUrl}` }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        976,
+        160
+      ],
+      "id": "4ddce9cb-d437-46b2-922e-40df8383c360",
+      "name": "Critical Alert"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://discord.com/api/webhooks/1539803481014141049/LWNmMLBAqDKoVeeIbXGT65wl4Mb6HSxB_ey6YAgN44VRn1yAWgwfNGb2wrXZ1iWQMd9F",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "={{ `🟡 MEDIUM ERROR\n\nWorkflow: ${$json.workflowName}\nNode: ${$json.failedNode}\n\nType: ${$json.errorType}\nSubtype: ${$json.errorSubtype}\nMethod: ${$json.method}\n\nRequest:\n${$json.requestUrl}\n\nError:\n${$json.errorMessage}\n\nExecution:\n${$json.executionUrl}` }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        976,
+        -128
+      ],
+      "id": "64a45afd-dfc0-4a73-8ddb-fce15bbed10e",
+      "name": "Medium Alert"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://discord.com/api/webhooks/1539803614535618561/40h7McEedHzbEd4mfS2kHv5YIf9Djq-cDjHKj-cmLZ9i1MnTBjjY9m0UrOIUgyOdRNoM",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "={{ `🟢 LOW ERROR\n\nWorkflow: ${$json.workflowName}\nNode: ${$json.failedNode}\n\nType: ${$json.errorType}\nSubtype: ${$json.errorSubtype}\nMethod: ${$json.method}\n\nRequest:\n${$json.requestUrl}\n\nError:\n${$json.errorMessage}\n\nExecution:\n${$json.executionUrl}` }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        976,
+        -272
+      ],
+      "id": "de8b0306-4733-48eb-acc9-288e8259239a",
+      "name": "Low Alert"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Classify Error": {
+      "main": [
+        [
+          {
+            "node": "Assign Severity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assign Severity": {
+      "main": [
+        [
+          {
+            "node": "Store Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Catch Errors": {
+      "main": [
+        [
+          {
+            "node": "Normalize Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Data": {
+      "main": [
+        [
+          {
+            "node": "Classify Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Error": {
+      "main": [
+        [
+          {
+            "node": "Route Severity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Severity": {
+      "main": [
+        [
+          {
+            "node": "Low Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Medium Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "High Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Critical Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "fc6654ff-157b-4b85-9db5-2fd0d6ba0f75",
+  "meta": {
+    "instanceId": "d772304f4deedb84ae673cf89237f857eb9beb9d6e46f7197852fa4adda8f530"
+  },
+  "nodeGroups": [],
+  "id": "mMTXj4qmcLzXkLPl",
+  "tags": []
+}
